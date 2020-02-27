@@ -5,9 +5,11 @@ CLASS zcl_ca_bopf_util DEFINITION
 
   PUBLIC SECTION.
 
+    "! <p class="shorttext synchronized">Constructor</p>
     METHODS constructor
       IMPORTING iv_bo_key TYPE /bobf/obm_bo_key
       RAISING   /bobf/cx_frw.
+    "! <p class="shorttext synchronized">Modify and save data</p>
     METHODS modify_save_data
       IMPORTING
         !it_mod      TYPE /bobf/t_frw_modification
@@ -16,6 +18,7 @@ CLASS zcl_ca_bopf_util DEFINITION
         !eo_message  TYPE REF TO /bobf/if_frw_message
         !et_return   TYPE bapiret2_t
         !ev_rejected TYPE sap_bool .
+    "! <p class="shorttext synchronized">Modify data</p>
     METHODS modify_data
       IMPORTING
         !it_mod     TYPE /bobf/t_frw_modification
@@ -23,6 +26,7 @@ CLASS zcl_ca_bopf_util DEFINITION
       EXPORTING
         !eo_message TYPE REF TO /bobf/if_frw_message
         !et_return  TYPE bapiret2_t .
+    "! <p class="shorttext synchronized">Save data</p>
     METHODS save_data
       IMPORTING
         !iv_langu    TYPE sylangu DEFAULT sy-langu
@@ -30,6 +34,7 @@ CLASS zcl_ca_bopf_util DEFINITION
         !eo_message  TYPE REF TO /bobf/if_frw_message
         !et_return   TYPE bapiret2_t
         !ev_rejected TYPE sap_bool .
+    "! <p class="shorttext synchronized">Convertr BOPF message to bapiret2_t</p>
     METHODS conv_message_bopf_2_return
       IMPORTING
         !io_message TYPE REF TO /bobf/if_frw_message
@@ -74,7 +79,7 @@ CLASS zcl_ca_bopf_util IMPLEMENTATION.
 
       DATA(lo_msg) = CAST /bobf/cm_frw_symsg( <ls_messages>-message ).
 
-      INSERT zcl_ca_utilities=>fill_return( iv_type       = zif_sat_data=>cs_message-error
+      INSERT zcl_ca_utilities=>fill_return( iv_type       = 'E'
                                             iv_number     = <ls_messages>-message->if_t100_message~t100key-msgno
                                             iv_id         = <ls_messages>-message->if_t100_message~t100key-msgid
                                             iv_message_v1 = lo_msg->mv_attr1
@@ -124,7 +129,7 @@ CLASS zcl_ca_bopf_util IMPLEMENTATION.
       eo_message = eo_message
       et_return  = et_return ).
 
-    READ TABLE et_return TRANSPORTING NO FIELDS WITH KEY type = zif_sat_data=>cs_message-error.
+    READ TABLE et_return TRANSPORTING NO FIELDS WITH KEY type = 'E'.
     IF sy-subrc NE 0. " Sin errores se graba
       save_data(
         EXPORTING
