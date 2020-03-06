@@ -5,6 +5,14 @@ CLASS zcl_ca_bopf_util DEFINITION
 
   PUBLIC SECTION.
 
+    CONSTANTS: BEGIN OF cs_message,
+                 error       TYPE sy-msgty VALUE 'E',
+                 success     TYPE sy-msgty VALUE 'S',
+                 information TYPE sy-msgty VALUE 'I',
+                 dump        TYPE sy-msgty VALUE 'X',
+                 termination TYPE sy-msgty VALUE 'A',
+               END OF cs_message .
+
     "! <p class="shorttext synchronized">Constructor</p>
     METHODS constructor
       IMPORTING iv_bo_key TYPE /bobf/obm_bo_key
@@ -79,7 +87,7 @@ CLASS zcl_ca_bopf_util IMPLEMENTATION.
 
       DATA(lo_msg) = CAST /bobf/cm_frw_symsg( <ls_messages>-message ).
 
-      INSERT zcl_ca_utilities=>fill_return( iv_type       = 'E'
+      INSERT zcl_ca_utilities=>fill_return( iv_type       = cs_message-error
                                             iv_number     = <ls_messages>-message->if_t100_message~t100key-msgno
                                             iv_id         = <ls_messages>-message->if_t100_message~t100key-msgid
                                             iv_message_v1 = lo_msg->mv_attr1
@@ -129,7 +137,7 @@ CLASS zcl_ca_bopf_util IMPLEMENTATION.
       eo_message = eo_message
       et_return  = et_return ).
 
-    READ TABLE et_return TRANSPORTING NO FIELDS WITH KEY type = 'E'.
+    READ TABLE et_return TRANSPORTING NO FIELDS WITH KEY type = cs_message-error.
     IF sy-subrc NE 0. " Sin errores se graba
       save_data(
         EXPORTING
