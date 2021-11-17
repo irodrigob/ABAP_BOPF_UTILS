@@ -42,13 +42,21 @@ CLASS zcl_ca_bopf_util DEFINITION
         !eo_message  TYPE REF TO /bobf/if_frw_message
         !et_return   TYPE bapiret2_t
         !ev_rejected TYPE sap_bool .
-    "! <p class="shorttext synchronized">Convertr BOPF message to bapiret2_t</p>
+    "! <p class="shorttext synchronized">Convert BOPF message to bapiret2_t</p>
     METHODS conv_message_bopf_2_return
       IMPORTING
         !io_message TYPE REF TO /bobf/if_frw_message
         !iv_langu   TYPE sylangu DEFAULT sy-langu
       CHANGING
         !ct_return  TYPE bapiret2_t .
+    "! <p class="shorttext synchronized">Rollback data</p>
+    METHODS rollback
+      IMPORTING
+        iv_cleanup_mode TYPE /bobf/conf_cleanup_mode OPTIONAL
+        !iv_langu       TYPE sylangu DEFAULT sy-langu
+      EXPORTING
+        et_return       TYPE bapiret2_t.
+
   PROTECTED SECTION.
     DATA mo_svc_mngr TYPE REF TO /bobf/if_tra_service_manager.
     DATA mo_txn_mngr TYPE REF TO /bobf/if_tra_transaction_mgr.
@@ -87,7 +95,7 @@ CLASS zcl_ca_bopf_util IMPLEMENTATION.
 
       DATA(lo_msg) = CAST /bobf/cm_frw_symsg( <ls_messages>-message ).
 
-      INSERT zcl_ca_utilities=>fill_return( iv_type       = cs_message-error
+      INSERT zcl_ca_utilities=>fill_return( iv_type       = COND #( WHEN lo_msg->severity IS NOT INITIAL THEN lo_msg->severity ELSE cs_message-error )
                                             iv_number     = <ls_messages>-message->if_t100_message~t100key-msgno
                                             iv_id         = <ls_messages>-message->if_t100_message~t100key-msgid
                                             iv_message_v1 = lo_msg->mv_attr1
@@ -180,4 +188,18 @@ CLASS zcl_ca_bopf_util IMPLEMENTATION.
 
     ENDIF.
   ENDMETHOD.
+  METHOD rollback.
+    CLEAR et_return.
+    DATA(lo_message) = mo_txn_mngr->cleanup( iv_cleanup_mode = iv_cleanup_mode ).
+
+    IF lo_message IS BOUND AND et_return IS SUPPLIED.
+      conv_message_bopf_2_return(
+          EXPORTING
+            io_message = lo_message
+            iv_langu   = iv_langu
+          CHANGING
+            ct_return  = et_return ).
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.
